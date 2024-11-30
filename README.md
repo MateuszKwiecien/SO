@@ -1,5 +1,5 @@
 # SO
-Projekt na Systemy Operacyjne
+Projekt na Systemy Operacyjne\
 Link do repozytorium : https://github.com/MateuszKwiecien/SO
 
 # Temat 3 - Fabryka

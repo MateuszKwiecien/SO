@@ -5,8 +5,9 @@
 #include <sys/shm.h>
 #include <sys/sem.h>
 #include <sys/msg.h>
+#include <csignal>
 #include <iostream>
-#include<unistd.h>
+#include <unistd.h>
 
 const int X_value = 1;  // The amount of space X takes up in storage
 const int Y_value = 2;  // The amount of space Y takes up in storage

@@ -7,6 +7,10 @@ int main(){
 
     // Create shared memory from Warehouse struct
     int shm_id = shmget(shared_memory_key, sizeof(Warehouse), IPC_CREAT | 0666);
+    if (shm_id == -1) {
+        perror("shmget failed");
+        exit(1);
+    }
     Warehouse* warehouse = (Warehouse*)shmat(shm_id, nullptr, 0);
 
     while(true){

@@ -10,6 +10,11 @@ int main(){
     int shm_id = shmget(shared_memory_key, sizeof(Warehouse), IPC_CREAT | 0666);
     Warehouse* warehouse = (Warehouse*)shmat(shm_id, nullptr, 0);
 
+    // Inicjalizacja magazynu
+    warehouse->X= 0;
+    warehouse->Y= 0;
+    warehouse->Z = 0;
+
     // Just checking if any of it works
     while(true){
         cout << "X: " << warehouse->X << '\t'

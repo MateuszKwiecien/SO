@@ -1,4 +1,0 @@
-#ifndef SUPPLIER_HPP
-#define SUPPLIER_HPP
-
-#endif //SUPPLIER_HPP

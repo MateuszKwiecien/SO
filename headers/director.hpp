@@ -1,4 +1,0 @@
-#ifndef DIRECTOR_HPP
-#define DIRECTOR_HPP
-
-#endif //DIRECTOR_HPP

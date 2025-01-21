@@ -52,13 +52,26 @@ void supply_product(Warehouse* warehouse, char designation, int sem_id){
     semaphore_op(sem_id, SEM_MUTEX, 1);
 }
 
+static char designation;    // Designation of supplier process
+Warehouse* warehouse;       // Initialize warehouse struct
+
+void sigint_handler(int sig){
+    cout << "Supplier \'" << designation << "\' received SIGINT and stopped working." << endl;
+    exit(0);
+}
+
 int main(){
-    char designation;   // Designation of supplier process
+    int shm_id_warehouse = init_shared_memory_warehouse();          // Initialize shared memory for Warehouse struct
+    int shm_id_pid = init_shared_memory_pid();                      // Initialize shared memory for PID array
+    int sem_id = init_semaphores();                                 // Initialize semaphores
 
-    int shm_id = init_shared_memory();  // Initialize shared memory
-    int sem_id = init_semaphores();     // Initialize semaphores
+    signal(SIGINT, sigint_handler);
 
-    Warehouse* warehouse = (Warehouse*)shmat(shm_id, nullptr, 0);   // Assign Warehouse struct as shared memory
+    warehouse = (Warehouse*)shmat(shm_id_warehouse, nullptr, 0);    // Assign Warehouse struct as shared memory
+    pid_t* pid_array = (pid_t *)shmat(shm_id_pid, nullptr, 0);      // Assign PID array as shared memory
+
+    semaphore_op(sem_id, SEM_WH, 0);
+    cout << "wykonalo sie" << endl;
 
     switch(fork()){ // fork() error
         case -1:
@@ -68,6 +81,11 @@ int main(){
 
         case 0:     // child process
             designation = 'X';
+
+            // Place process PID in the array
+            semaphore_op(sem_id, SEM_PID, -1);
+            pid_array[2] = getpid();
+            semaphore_op(sem_id, SEM_PID, 1);
 
             while(true){
                 supply_product(warehouse, designation, sem_id);
@@ -88,6 +106,11 @@ int main(){
             case 0:         // child process
                 designation = 'Y';
 
+                // Place process PID in the array
+                semaphore_op(sem_id, SEM_PID, -1);
+                pid_array[3] = getpid();
+                semaphore_op(sem_id, SEM_PID, 1);
+
                 while(true){
                     supply_product(warehouse, designation, sem_id);
 
@@ -99,6 +122,11 @@ int main(){
 
             default:        // parent process
                 designation = 'Z';
+
+                // Place process PID in the array
+                semaphore_op(sem_id, SEM_PID, -1);
+                pid_array[4] = getpid();
+                semaphore_op(sem_id, SEM_PID, 1);
 
                 while(true){
                     supply_product(warehouse, designation, sem_id);

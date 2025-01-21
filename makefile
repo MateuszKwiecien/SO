@@ -1,4 +1,4 @@
-all: Warehouse Supplier Assembler
+all: Warehouse Supplier Assembler Director
 
 Warehouse:
 	g++ processes/warehouse.cpp IPC_helpers.cpp -o warehouse
@@ -9,5 +9,8 @@ Supplier:
 Assembler:
 	g++ processes/assembler.cpp IPC_helpers.cpp -o assembler
 
+Director:
+	g++ processes/director.cpp IPC_helpers.cpp -o director
+
 clean:
-	rm -r warehouse supplier assembler file
+	rm -r warehouse supplier assembler file director stock

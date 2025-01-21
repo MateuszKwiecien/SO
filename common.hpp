@@ -1,10 +1,8 @@
 #pragma once
-#include <fstream>
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
-#include <sys/msg.h>
 #include <csignal>
 #include <iostream>
 #include <unistd.h>
@@ -19,7 +17,8 @@
 #define SEM_X       1
 #define SEM_Y       2
 #define SEM_Z       3
-
+#define SEM_PID     4
+#define SEM_WH      5
 
 struct Warehouse{
     int X;
@@ -28,7 +27,7 @@ struct Warehouse{
 };
 
 key_t generate_ipc_key(char proj_id);
-int init_shared_memory();
+int init_shared_memory_warehouse();
+int init_shared_memory_pid();
 int init_semaphores();
 void semaphore_op(int sem_id, int sem_num, int op);
-int init_message_queue();

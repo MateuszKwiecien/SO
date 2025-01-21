@@ -25,14 +25,26 @@ void assemble_product(Warehouse* warehouse, char designation, int sem_id){
     semaphore_op(sem_id, SEM_MUTEX, 1);
 }
 
+static char designation;    // Designation of assembler process
+Warehouse* warehouse;       // Initialize warehouse struct
+
+void sigint_handler(int sig){
+    cout << "Assembler \'" << designation << "\' received SIGINT and stopped working." << endl;
+    exit(0);
+}
+
 int main(){
-    char designation;   // Designation of assembler process
+    int shm_id_warehouse = init_shared_memory_warehouse();          // Initialize shared memory
+    int shm_id_pid = init_shared_memory_pid();                      // Initialize shared memory for PID array
+    int sem_id = init_semaphores();                                 // Initialize semaphores
 
-    int shm_id = init_shared_memory();  // Initialize shared memory
-    int sem_id = init_semaphores();     // Initialize semaphores
+    signal(SIGINT, sigint_handler);
 
-    Warehouse* warehouse = (Warehouse*)shmat(shm_id, nullptr, 0);   // Assign Warehouse struct as shared memory
-    
+    warehouse = (Warehouse*)shmat(shm_id_warehouse, nullptr, 0);    // Assign Warehouse struct as shared memory
+    pid_t* pid_array = (pid_t *)shmat(shm_id_pid, nullptr, 0);             // Assign PID array as shared memory
+
+    semaphore_op(sem_id, SEM_WH, 0);
+    cout << "Wykonalo sie" << endl;
 
     switch(fork()){
         case -1:    // fork() error
@@ -42,6 +54,12 @@ int main(){
 
         case 0:     // child process
             designation = 'A';
+
+            // Place process PID in the array
+            semaphore_op(sem_id, SEM_PID, -1);
+            pid_array[0] = getpid();
+            semaphore_op(sem_id, SEM_PID, 1);
+
             while(true){
                 assemble_product(warehouse, designation, sem_id);
                 sleep(5);
@@ -50,10 +68,15 @@ int main(){
         
         default:    // parent process
             designation = 'B';
+
+            // Place process PID in the array
+            semaphore_op(sem_id, SEM_PID, -1);
+            pid_array[1] = getpid();
+            semaphore_op(sem_id, SEM_PID, 1);
+
             while(true){
                 assemble_product(warehouse, designation, sem_id);
                 sleep(5);
             }
-        
     }
 }

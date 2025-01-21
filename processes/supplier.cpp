@@ -60,13 +60,13 @@ int main(){
 
     Warehouse* warehouse = (Warehouse*)shmat(shm_id, nullptr, 0);   // Assign Warehouse struct as shared memory
 
-    switch(fork()){
+    switch(fork()){ // fork() error
         case -1:
             cout << "ERROR: fork() function returned an error." << endl;
             exit(1);
         break;
 
-        case 0:
+        case 0:     // child process
             designation = 'X';
 
             while(true){
@@ -78,14 +78,14 @@ int main(){
             }
         break;
 
-        default:
-        switch (fork()){
+        default:            // parent process
+        switch (fork()){    // fork() error
             case -1:
                 cout << "ERROR: fork() function returned an error." << endl;
                 exit(1);
             break;
 
-            case 0:
+            case 0:         // child process
                 designation = 'Y';
 
                 while(true){
@@ -97,7 +97,7 @@ int main(){
                 }
             break;
 
-            default:
+            default:        // parent process
                 designation = 'Z';
 
                 while(true){

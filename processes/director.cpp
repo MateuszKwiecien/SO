@@ -1,4 +1,7 @@
 #include "../common.hpp"
+#include <filesystem>
+#include <fstream>
+
 #define BUFFER_SIZE 2048
 
 using namespace std;
@@ -45,6 +48,10 @@ void execute_command(const char option){
 
             stock.clear();
             stock.open(stock_file_name, ios::trunc | ios::out); // Opens the file in write mode and truncates its content
+            if(!stock.is_open()){                               // If the file could not be opened it discards the stock
+                cout << "Could no open file to write\nDiscarding the stock\n";
+                return;
+            }
             stock                                               // Saved the content of the warehouse to the file
                 << warehouse->X << '\n'
                 << warehouse->Y << '\n'
@@ -70,6 +77,88 @@ void execute_command(const char option){
     }
 }
 
+bool is_number(const string& str){
+    for(const char& c : str){
+        if (!isdigit(c)) {
+            return false;
+        }
+    }
+    return !str.empty();
+}
+
+void initialize_to_zero(){
+    warehouse->X = 0;
+    warehouse->Y = 0;
+    warehouse->Z = 0;
+}
+
+void read_stock_from_file(){
+    cout << "Reading stock values form a file\n";
+    stock.clear();
+    stock.open(stock_file_name, ios::in);   // Opens the file to read the stock values
+    if(!stock.is_open()){                   // File could not be opened, initializing stock values to 0
+        cout << "Could not open file to read!\n"
+            << "Initializing warehouse stock to 0 instead\n";
+        initialize_to_zero();
+        return;
+    }
+
+    string temporary;   // Temporarily holds the input from file to check validity
+
+    stock >> temporary;
+    if(is_number(temporary)){
+        warehouse->X = stoi(temporary);
+    }
+    else{
+        cout << "Could not read a number.\n"
+            << "Initializing warehouse stock to 0 instead\n";
+        initialize_to_zero();
+        return;
+    }
+    if(warehouse->X > X_max){
+        cout << "Provided number of components is too large to fit into the warehouse.\n"
+        << "Initializing warehouse stock to 0 instead\n";
+        initialize_to_zero();
+        return;
+    }
+
+    stock >> temporary;
+    if(is_number(temporary)){
+        warehouse->Y = stoi(temporary);
+    }
+    else{
+        cout << "Could not read a number.\n"
+            << "Initializing warehouse stock to 0 instead\n";         
+        initialize_to_zero();
+        return;
+    }
+    if(warehouse->Y > Y_max){
+        cout << "Provided number of components is too large to fit into the warehouse.\n"
+        << "Initializing warehouse stock to 0 instead\n";
+        initialize_to_zero();
+        return;
+    }
+
+
+    stock >> temporary;
+    if(is_number(temporary)){
+        warehouse->Z = stoi(temporary);
+    }
+    else{
+        cout << "Could not read a number.\n"
+            << "Initializing warehouse stock to 0 instead\n";
+        initialize_to_zero();
+        return;
+    }
+    if(warehouse->Z > Z_max){
+        cout << "Provided number of components is too large to fit into the warehouse.\n"
+        << "Initializing warehouse stock to 0 instead\n";
+        initialize_to_zero();
+        return;
+    }
+
+}
+
 int main(){
     int shm_id_warehouse = init_shared_memory_warehouse();          // Initialize shared memory
     int shm_id_pid = init_shared_memory_pid();                      // Initialize shared memory for PID array
@@ -77,6 +166,15 @@ int main(){
 
     warehouse = (Warehouse*)shmat(shm_id_warehouse, nullptr, 0);    // Assign Warehouse struct as shared memory
     pid_array = (pid_t *)shmat(shm_id_pid, nullptr, 0);             // Assign PID array as shared memory
+
+
+    if(filesystem::exists(stock_file_name)){                        // Checks if stock file exists
+        read_stock_from_file();
+    }
+    else{
+        initialize_to_zero();
+    }
+    semaphore_op(sem_id, SEM_WH, -1);                                // After initializing the warehouse it allows the workers to start
 
     cout << "\tDIRECTOR PROCESS\n========================================";
     char option;  // User chosen option

@@ -10,7 +10,7 @@ Assembler:
 	g++ processes/assembler.cpp IPC_helpers.cpp -o assembler
 
 Director:
-	g++ processes/adirector.cpp IPC_helpers.cpp -o director
+	g++ processes/director.cpp IPC_helpers.cpp -o director
 
 clean:
-	rm -r warehouse supplier assembler file
+	rm -r warehouse supplier assembler file director

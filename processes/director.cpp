@@ -3,9 +3,11 @@
 
 using namespace std;
 
+const char* stock_file_name = "stock";
 pid_t* pid_array;       // Stores the values of PIDs of other processes
 Warehouse* warehouse;
-int sem_id;
+int sem_id;             // Needs to be a global variable to be accessed in a function
+fstream stock;          // Handler for the file 
 
 void read_option(char &option, char* buffer){
     cin >> buffer;
@@ -30,7 +32,24 @@ void execute_command(const char option){
         break;
 
         case '3':
+            semaphore_op(sem_id, 4, -1);
+            for(int i = 0; i < 5; i++){
+                kill(pid_array[i], SIGINT);
+            }
+            semaphore_op(sem_id, 4, 1);
 
+            cout
+                << warehouse->X << '\n'
+                << warehouse->Y << '\n'
+                << warehouse->Z << '\n';
+
+            stock.clear();
+            stock.open(stock_file_name, ios::trunc | ios::out); // Opens the file in write mode and truncates its content
+            stock                                               // Saved the content of the warehouse to the file
+                << warehouse->X << '\n'
+                << warehouse->Y << '\n'
+                << warehouse->Z << '\n';
+            stock.close();
         break;
 
         case '4':
@@ -54,7 +73,7 @@ void execute_command(const char option){
 int main(){
     int shm_id_warehouse = init_shared_memory_warehouse();          // Initialize shared memory
     int shm_id_pid = init_shared_memory_pid();                      // Initialize shared memory for PID array
-    sem_id = init_semaphores();     // Initialize semaphores
+    sem_id = init_semaphores();                                     // Initialize semaphores
 
     warehouse = (Warehouse*)shmat(shm_id_warehouse, nullptr, 0);    // Assign Warehouse struct as shared memory
     pid_array = (pid_t *)shmat(shm_id_pid, nullptr, 0);             // Assign PID array as shared memory

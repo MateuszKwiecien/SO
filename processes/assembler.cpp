@@ -25,14 +25,21 @@ void assemble_product(Warehouse* warehouse, char designation, int sem_id){
     semaphore_op(sem_id, SEM_MUTEX, 1);
 }
 
-int main(){
-    char designation;   // Designation of assembler process
+static char designation;    // Designation of assembler process
+Warehouse* warehouse;       // Initialize warehouse struct
 
+void sigint_handler(int sig){
+    cout << "Assembler \'" << designation << "\' received SIGINT and stopped working.";
+    exit(0);
+}
+
+int main(){
     int shm_id = init_shared_memory();  // Initialize shared memory
     int sem_id = init_semaphores();     // Initialize semaphores
 
-    Warehouse* warehouse = (Warehouse*)shmat(shm_id, nullptr, 0);   // Assign Warehouse struct as shared memory
-    
+    signal(SIGINT, sigint_handler);
+
+    warehouse = (Warehouse*)shmat(shm_id, nullptr, 0);   // Assign Warehouse struct as shared memory
 
     switch(fork()){
         case -1:    // fork() error

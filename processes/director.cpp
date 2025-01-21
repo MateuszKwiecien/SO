@@ -11,6 +11,7 @@ void read_option(char &option, char* buffer){
 void execute_command(const char option){
     switch(option){
         case '1':
+            
         break;
 
         case '2':

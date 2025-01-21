@@ -20,3 +20,14 @@ key_t generate_ipc_key(char id) {
 
     return key;
 }
+
+
+int init_shared_memory() {
+    key_t key = generate_ipc_key('S');
+    int shmid = shmget(key, sizeof(Warehouse), IPC_CREAT | 0666);
+    if (shmid == -1) {
+        perror("Błąd przy tworzeniu pamięci współdzielonej");
+        exit(1);
+    }
+    return shmid;
+}

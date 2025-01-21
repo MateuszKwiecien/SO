@@ -3,15 +3,8 @@
 using namespace std;
 
 int main(){
-    // Obtain keys for IPC communication
-    key_t shared_memory_key = generate_ipc_key('S');
-
-    // Create shared memory from Warehouse struct
-    int shm_id = shmget(shared_memory_key, sizeof(Warehouse), IPC_CREAT | 0666);
-    if (shm_id == -1) {
-        perror("shmget failed");
-        exit(1);
-    }
+    // Initialize shared memory
+    int shm_id = init_shared_memory();
     Warehouse* warehouse = (Warehouse*)shmat(shm_id, nullptr, 0);
 
     while(true){

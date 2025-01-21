@@ -30,10 +30,15 @@ void execute_command(const char option){
         break;
 
         case '3':
-            
+
         break;
 
         case '4':
+            semaphore_op(sem_id, 4, -1);
+            for(int i = 0; i < 5; i++){
+                kill(pid_array[i], SIGINT);
+            }
+            semaphore_op(sem_id, 4, 1);
         break;
 
         case '5':

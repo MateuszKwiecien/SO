@@ -19,7 +19,7 @@
 #define SEM_X       1
 #define SEM_Y       2
 #define SEM_Z       3
-
+#define SEM_PID     4
 
 struct Warehouse{
     int X;
@@ -27,8 +27,17 @@ struct Warehouse{
     int Z;
 };
 
+// struct Pids{
+//     pid_t A;
+//     pid_t B;
+//     pid_t X;
+//     pid_t Y;
+//     pid_t Z;
+// };
+
 key_t generate_ipc_key(char proj_id);
-int init_shared_memory();
+int init_shared_memory_warehouse();
+int init_shared_memory_pid();
 int init_semaphores();
 void semaphore_op(int sem_id, int sem_num, int op);
 int init_message_queue();

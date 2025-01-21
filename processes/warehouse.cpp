@@ -5,7 +5,7 @@ using namespace std;
 
 int main(){
     // Initialize shared memory
-    int shm_id = init_shared_memory();
+    int shm_id = init_shared_memory_warehouse();
     Warehouse* warehouse = (Warehouse*)shmat(shm_id, nullptr, 0);
 
     // Inicjalizacja magazynu

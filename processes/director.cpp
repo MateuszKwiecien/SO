@@ -3,6 +3,9 @@
 
 using namespace std;
 
+pid_t* pid_array;       // Stores the values of PIDs of other processes
+Warehouse* warehouse;
+
 void read_option(char &option, char* buffer){
     cin >> buffer;
     option = buffer[0];
@@ -11,7 +14,9 @@ void read_option(char &option, char* buffer){
 void execute_command(const char option){
     switch(option){
         case '1':
-            
+            for(int i = 0; i < 5; i++){
+                kill(pid_array[i], SIGINT);
+            }
         break;
 
         case '2':
@@ -34,6 +39,13 @@ void execute_command(const char option){
 }
 
 int main(){
+    int shm_id_warehouse = init_shared_memory_warehouse();          // Initialize shared memory
+    int shm_id_pid = init_shared_memory_pid();                      // Initialize shared memory for PID array
+    int sem_id = init_semaphores();     // Initialize semaphores
+
+    warehouse = (Warehouse*)shmat(shm_id_warehouse, nullptr, 0);    // Assign Warehouse struct as shared memory
+    pid_array = (pid_t *)shmat(shm_id_pid, nullptr, 0);             // Assign PID array as shared memory
+
     cout << "\tDIRECTOR PROCESS\n========================================";
     char option;  // User chosen option
 

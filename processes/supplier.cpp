@@ -50,37 +50,54 @@ int main(){
     int shm_id = init_shared_memory();
     Warehouse* warehouse = (Warehouse*)shmat(shm_id, nullptr, 0);
 
-    if(fork()){
-        designation = 'X';
+    switch(fork()){
+        case -1:
+            cout << "ERROR: fork() function returned an error." << endl;
+            exit(1);
+        break;
 
-        while(true){
-            supply_product(warehouse, designation);
+        case 0:
+            designation = 'X';
 
-            std::mt19937_64 eng{std::random_device{}()};
-            std::uniform_int_distribution<> dist{3, 7};
-            std::this_thread::sleep_for(std::chrono::seconds{dist(eng)});
+            while(true){
+                supply_product(warehouse, designation);
+
+                std::mt19937_64 eng{std::random_device{}()};
+                std::uniform_int_distribution<> dist{3, 7};
+                std::this_thread::sleep_for(std::chrono::seconds{dist(eng)});
+            }
+        break;
+
+        default:
+        switch (fork()){
+            case -1:
+                cout << "ERROR: fork() function returned an error." << endl;
+                exit(1);
+            break;
+
+            case 0:
+                designation = 'Y';
+
+                while(true){
+                    supply_product(warehouse, designation);
+
+                    std::mt19937_64 eng{std::random_device{}()};
+                    std::uniform_int_distribution<> dist{3, 7};
+                    std::this_thread::sleep_for(std::chrono::seconds{dist(eng)});
+                }
+            break;
+
+            default:
+                designation = 'Z';
+
+                while(true){
+                    supply_product(warehouse, designation);
+                    
+                    std::mt19937_64 eng{std::random_device{}()};
+                    std::uniform_int_distribution<> dist{3, 7};
+                    std::this_thread::sleep_for(std::chrono::seconds{dist(eng)});
+                }
         }
     }
-    else if(fork()){
-        designation = 'Y';
 
-        while(true){
-            supply_product(warehouse, designation);
-
-            std::mt19937_64 eng{std::random_device{}()};
-            std::uniform_int_distribution<> dist{3, 7};
-            std::this_thread::sleep_for(std::chrono::seconds{dist(eng)});
-        }
-    }
-    else{
-        designation = 'Z';
-
-        while(true){
-            supply_product(warehouse, designation);
-            
-            std::mt19937_64 eng{std::random_device{}()};
-            std::uniform_int_distribution<> dist{3, 7};
-            std::this_thread::sleep_for(std::chrono::seconds{dist(eng)});
-        }
-    }
 }

@@ -22,18 +22,26 @@ int main(){
     Warehouse* warehouse = (Warehouse*)shmat(shm_id, nullptr, 0);
     
 
-    if(fork()){
-        designation = 'A';
-        while(true){
-            assemble_product(warehouse, designation);
-            sleep(5);
-        }
-    }
-    else{
-        designation = 'B';
-        while(true){
-            assemble_product(warehouse, designation);
-            sleep(5);
-        }
+    switch(fork()){
+        case -1:    // fork() error
+            cout << "ERROR: fork() function returned an error." << endl;
+            exit(1);
+        break;
+        
+        case 0:     // child process
+            designation = 'A';
+            while(true){
+                assemble_product(warehouse, designation);
+                sleep(5);
+            }
+        break;
+
+        default:    // parent process
+            designation = 'B';
+            while(true){
+                assemble_product(warehouse, designation);
+                sleep(5);
+            }
+        
     }
 }

@@ -11,7 +11,7 @@ int main(){
     // Inicjalizacja magazynu
     warehouse->X= 0;
     warehouse->Y= 0;
-    warehouse->Z = 0;
+    warehouse->Z= 0;
 
     // Just checking if any of it works
     while(true){

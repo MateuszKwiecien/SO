@@ -9,10 +9,10 @@
 #include <iostream>
 #include <unistd.h>
 
-#define X_value = 1;  // The amount of space X takes up in storage
-#define Y_value = 2;  // The amount of space Y takes up in storage
-#define Z_value = 3;  // The amount of space Z takes up in storage
-#define M = 1000;     // Maximum capacity of the Warehouse
+#define M       90      // Maximum capacity of the Warehouse
+#define X_max   (M / 2) // Maximum capacity for component X
+#define Y_max   (M / 3) // Maximum capacity for component Y
+#define Z_max   (M / 6) // Maximum capacity for component Z
 
 
 struct Warehouse{

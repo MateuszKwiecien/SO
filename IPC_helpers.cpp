@@ -1,6 +1,8 @@
-#include "common.h"
+#include "common.hpp"
 
-key_t generate_key(char id) {
+const char* IPC_PATH = "./file";    // Path to the directory containing IPC files
+
+key_t generate_ipc_key(char id) {
     // Ensure the key file exists
     FILE *file = fopen(IPC_PATH, "w");
     if (file == NULL) {

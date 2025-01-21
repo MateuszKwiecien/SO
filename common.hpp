@@ -27,14 +27,6 @@ struct Warehouse{
     int Z;
 };
 
-// struct Pids{
-//     pid_t A;
-//     pid_t B;
-//     pid_t X;
-//     pid_t Y;
-//     pid_t Z;
-// };
-
 key_t generate_ipc_key(char proj_id);
 int init_shared_memory_warehouse();
 int init_shared_memory_pid();

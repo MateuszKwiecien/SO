@@ -5,6 +5,7 @@ using namespace std;
 
 pid_t* pid_array;       // Stores the values of PIDs of other processes
 Warehouse* warehouse;
+int sem_id;
 
 void read_option(char &option, char* buffer){
     cin >> buffer;
@@ -13,16 +14,23 @@ void read_option(char &option, char* buffer){
 
 void execute_command(const char option){
     switch(option){
-        case '1':
-            for(int i = 0; i < 5; i++){
-                kill(pid_array[i], SIGINT);
-            }
+        case '1':   // Kills all assembler processes
+            semaphore_op(sem_id, 4, -1);
+            kill(pid_array[0], SIGINT);
+            kill(pid_array[1], SIGINT);
+            semaphore_op(sem_id, 4, 1);
         break;
 
-        case '2':
+        case '2':   // Kills all supplier processes
+            semaphore_op(sem_id, 4, -1);
+            kill(pid_array[2], SIGINT);
+            kill(pid_array[3], SIGINT);
+            kill(pid_array[4], SIGINT);
+            semaphore_op(sem_id, 4, 1);
         break;
 
         case '3':
+            
         break;
 
         case '4':
@@ -41,7 +49,7 @@ void execute_command(const char option){
 int main(){
     int shm_id_warehouse = init_shared_memory_warehouse();          // Initialize shared memory
     int shm_id_pid = init_shared_memory_pid();                      // Initialize shared memory for PID array
-    int sem_id = init_semaphores();     // Initialize semaphores
+    sem_id = init_semaphores();     // Initialize semaphores
 
     warehouse = (Warehouse*)shmat(shm_id_warehouse, nullptr, 0);    // Assign Warehouse struct as shared memory
     pid_array = (pid_t *)shmat(shm_id_pid, nullptr, 0);             // Assign PID array as shared memory

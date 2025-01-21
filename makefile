@@ -10,4 +10,4 @@ Assembler:
 	g++ processes/assembler.cpp IPC_helpers.cpp -o assembler
 
 clean:
-	rm -r warehouse supplier
+	rm -r warehouse supplier assembler file

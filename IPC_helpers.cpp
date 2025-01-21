@@ -47,3 +47,15 @@ int init_semaphores() {
 
     return sem_id;
 }
+
+void semaphore_op(int sem_id, int sem_num, int op) {
+    struct sembuf sb = {
+        static_cast<short unsigned int>(sem_num), 
+        static_cast<short int>(op), 
+        0
+    };
+    if (semop(sem_id, &sb, 1) == -1) {
+        perror("semop failed");
+        exit(1);
+    }
+}

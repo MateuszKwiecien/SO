@@ -43,9 +43,6 @@ int main(){
     warehouse = (Warehouse*)shmat(shm_id_warehouse, nullptr, 0);    // Assign Warehouse struct as shared memory
     pid_t* pid_array = (pid_t *)shmat(shm_id_pid, nullptr, 0);             // Assign PID array as shared memory
 
-    semaphore_op(sem_id, SEM_WH, 0);
-    cout << "Wykonalo sie" << endl;
-
     switch(fork()){
         case -1:    // fork() error
             cout << "ERROR: fork() function returned an error." << endl;

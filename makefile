@@ -13,4 +13,4 @@ Director:
 	g++ processes/director.cpp IPC_helpers.cpp -o director
 
 clean:
-	rm -r warehouse supplier assembler file director
+	rm -r warehouse supplier assembler file director stock

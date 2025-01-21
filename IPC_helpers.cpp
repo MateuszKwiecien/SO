@@ -43,7 +43,7 @@ int init_shared_memory_pid() {
 
 int init_semaphores() {
     key_t sem_key = generate_ipc_key('M');
-    int sem_id = semget(sem_key, 6, IPC_CREAT | 0666);
+    int sem_id = semget(sem_key, 5, IPC_CREAT | 0666);
     if (sem_id == -1) {
         perror("semget failed");
         exit(1);
@@ -55,7 +55,6 @@ int init_semaphores() {
     semctl(sem_id, SEM_Y, SETVAL, 0);
     semctl(sem_id, SEM_Z, SETVAL, 0);
     semctl(sem_id, SEM_PID, SETVAL, 1);
-    semctl(sem_id, SEM_WH, SETVAL, 1);
 
     return sem_id;
 }

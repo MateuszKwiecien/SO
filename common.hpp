@@ -22,3 +22,8 @@ struct Warehouse{
 };
 
 key_t generate_ipc_key(char proj_id);
+int init_shared_memory();
+int init_semaphore();
+int init_message_queue();
+void lock_semaphore(int semid);
+void unlock_semaphore(int semid);

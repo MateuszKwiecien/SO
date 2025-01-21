@@ -14,6 +14,12 @@
 #define Y_max   (M / 3) // Maximum capacity for component Y
 #define Z_max   (M / 6) // Maximum capacity for component Z
 
+// Semaphore macros
+#define SEM_MUTEX   0
+#define SEM_X       1
+#define SEM_Y       2
+#define SEM_Z       3
+
 
 struct Warehouse{
     int X;
@@ -23,7 +29,7 @@ struct Warehouse{
 
 key_t generate_ipc_key(char proj_id);
 int init_shared_memory();
-int init_semaphore();
+int init_semaphores();
 int init_message_queue();
 void lock_semaphore(int semid);
 void unlock_semaphore(int semid);

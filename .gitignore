@@ -52,3 +52,9 @@ Mkfile.old
 dkms.conf
 
 .vscode
+
+# Own files
+assembler
+supplier
+warehouse
+file

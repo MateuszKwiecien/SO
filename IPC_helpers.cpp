@@ -21,7 +21,6 @@ key_t generate_ipc_key(char id) {
     return key;
 }
 
-
 int init_shared_memory() {
     key_t key = generate_ipc_key('S');
     int shmid = shmget(key, sizeof(Warehouse), IPC_CREAT | 0666);
@@ -30,4 +29,33 @@ int init_shared_memory() {
         exit(1);
     }
     return shmid;
+}
+
+int init_semaphores() {
+    key_t sem_key = generate_ipc_key('M');
+    int sem_id = semget(sem_key, 4, IPC_CREAT | 0666);
+    if (sem_id == -1) {
+        perror("semget failed");
+        exit(1);
+    }
+
+    // Initialize semaphores
+    semctl(sem_id, SEM_MUTEX, SETVAL, 1);
+    semctl(sem_id, SEM_X, SETVAL, 0);
+    semctl(sem_id, SEM_Y, SETVAL, 0);
+    semctl(sem_id, SEM_Z, SETVAL, 0);
+
+    return sem_id;
+}
+
+void semaphore_op(int sem_id, int sem_num, int op) {
+    struct sembuf sb = {
+        static_cast<short unsigned int>(sem_num), 
+        static_cast<short int>(op), 
+        0
+    };
+    if (semop(sem_id, &sb, 1) == -1) {
+        perror("semop failed");
+        exit(1);
+    }
 }

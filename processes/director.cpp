@@ -6,7 +6,7 @@
 
 using namespace std;
 
-const char* stock_file_name = "stock";
+const char* STOCK_FILE_NAME = "stock";
 pid_t* pid_array;       // Stores the values of PIDs of other processes
 Warehouse* warehouse;
 int sem_id;             // Needs to be a global variable to be accessed in a function
@@ -47,7 +47,7 @@ void execute_command(const char option){
                 << warehouse->Z << '\n';
 
             stock.clear();
-            stock.open(stock_file_name, ios::trunc | ios::out); // Opens the file in write mode and truncates its content
+            stock.open(STOCK_FILE_NAME, ios::trunc | ios::out); // Opens the file in write mode and truncates its content
             if(!stock.is_open()){                               // If the file could not be opened it discards the stock
                 cout << "Could no open file to write\nDiscarding the stock\n";
                 return;
@@ -65,6 +65,8 @@ void execute_command(const char option){
                 kill(pid_array[i], SIGINT);
             }
             semaphore_op(sem_id, 4, 1);
+
+            remove(STOCK_FILE_NAME);
         break;
 
         case '5':
@@ -95,7 +97,7 @@ void initialize_to_zero(){
 void read_stock_from_file(){
     cout << "Reading stock values form a file\n";
     stock.clear();
-    stock.open(stock_file_name, ios::in);   // Opens the file to read the stock values
+    stock.open(STOCK_FILE_NAME, ios::in);   // Opens the file to read the stock values
     if(!stock.is_open()){                   // File could not be opened, initializing stock values to 0
         cout << "Could not open file to read!\n"
             << "Initializing warehouse stock to 0 instead\n";
@@ -168,7 +170,7 @@ int main(){
     pid_array = (pid_t *)shmat(shm_id_pid, nullptr, 0);             // Assign PID array as shared memory
 
 
-    if(filesystem::exists(stock_file_name)){                        // Checks if stock file exists
+    if(filesystem::exists(STOCK_FILE_NAME)){                        // Checks if stock file exists
         read_stock_from_file();
     }
     else{

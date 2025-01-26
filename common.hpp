@@ -31,3 +31,4 @@ int init_shared_memory_warehouse();
 int init_shared_memory_pid();
 int init_semaphores();
 void semaphore_op(int sem_id, int sem_num, int op);
+void remove_IPC_file();

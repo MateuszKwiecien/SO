@@ -10,7 +10,36 @@ const char* STOCK_FILE_NAME = "stock";
 pid_t* pid_array;       // Stores the values of PIDs of other processes
 Warehouse* warehouse;
 int sem_id;             // Needs to be a global variable to be accessed in a function
-fstream stock;          // Handler for the file 
+fstream stock;          // Handler for the file
+int shm_id_warehouse;
+int shm_id_pid;
+
+void cleanup_resources() {
+    // Detach shared memory
+    if (shmdt(warehouse) == -1) {
+        perror("Failed to detach warehouse shared memory");
+    }
+    if (shmdt(pid_array) == -1) {
+        perror("Failed to detach PID array shared memory");
+    }
+
+    // Remove shared memory segments
+    if (shmctl(shm_id_warehouse, IPC_RMID, nullptr) == -1) {
+        perror("Failed to remove warehouse shared memory segment");
+    }
+    if (shmctl(shm_id_pid, IPC_RMID, nullptr) == -1) {
+        perror("Failed to remove PID array shared memory segment");
+    }
+
+    // Remove semaphore set
+    if (semctl(sem_id, 0, IPC_RMID) == -1) {
+        perror("Failed to remove semaphore set");
+    }
+
+    remove_IPC_file();
+
+    cout << "IPC resources successfully cleaned up.\n";
+}
 
 void read_option(char &option, char* buffer){
     cin >> buffer;
@@ -57,6 +86,8 @@ void execute_command(const char option){
                 << warehouse->Y << '\n'
                 << warehouse->Z << '\n';
             stock.close();
+            cleanup_resources();
+            exit(0);
         break;
 
         case '4':
@@ -67,6 +98,8 @@ void execute_command(const char option){
             semaphore_op(sem_id, 4, 1);
 
             remove(STOCK_FILE_NAME);
+            cleanup_resources();
+            exit(0);
         break;
 
         case '5':
@@ -162,8 +195,8 @@ void read_stock_from_file(){
 }
 
 int main(){
-    int shm_id_warehouse = init_shared_memory_warehouse();          // Initialize shared memory
-    int shm_id_pid = init_shared_memory_pid();                      // Initialize shared memory for PID array
+    shm_id_warehouse = init_shared_memory_warehouse();              // Initialize shared memory
+    shm_id_pid = init_shared_memory_pid();                          // Initialize shared memory for PID array
     sem_id = init_semaphores();                                     // Initialize semaphores
 
     warehouse = (Warehouse*)shmat(shm_id_warehouse, nullptr, 0);    // Assign Warehouse struct as shared memory

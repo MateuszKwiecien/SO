@@ -24,7 +24,7 @@ key_t generate_ipc_key(char id) {
 
 int init_shared_memory_warehouse() {
     key_t key = generate_ipc_key('W');
-    int shmid = shmget(key, sizeof(Warehouse), IPC_CREAT | 0666);
+    int shmid = shmget(key, sizeof(Warehouse), IPC_CREAT | 0600);
     if (shmid == -1) {
         perror("Błąd przy tworzeniu pamięci współdzielonej");
         exit(1);
@@ -34,7 +34,7 @@ int init_shared_memory_warehouse() {
 
 int init_shared_memory_pid() {
     key_t key = generate_ipc_key('P');
-    int shmid = shmget(key, 5 * sizeof(pid_t), IPC_CREAT | 0666);
+    int shmid = shmget(key, 5 * sizeof(pid_t), IPC_CREAT | 0600);
     if (shmid == -1) {
         perror("Błąd przy tworzeniu pamięci współdzielonej");
         exit(1);
@@ -45,7 +45,7 @@ int init_shared_memory_pid() {
 int init_semaphores() {
     // Generate key for semaphore
     key_t sem_key = generate_ipc_key('M');
-    int sem_id = semget(sem_key, 5, IPC_CREAT | 0666);
+    int sem_id = semget(sem_key, 5, IPC_CREAT | 0600);
     if (sem_id == -1) {
         perror("semget failed");
         exit(1);
@@ -85,43 +85,17 @@ int init_semaphores() {
         exit(1);
     }
 
-    // Debug print the semaphore values
-    printf("Semaphore values: %d %d %d %d %d\n",
-        semctl(sem_id, SEM_MUTEX, GETVAL, 0),
-        semctl(sem_id, SEM_X, GETVAL, 0),
-        semctl(sem_id, SEM_Y, GETVAL, 0),
-        semctl(sem_id, SEM_Z, GETVAL, 0),
-        semctl(sem_id, SEM_PID, GETVAL, 0));
-
     return sem_id;
 }
 
 int init_semaphores_2() {
     // Generate key for semaphore
     key_t sem_key = generate_ipc_key('M');
-    int sem_id = semget(sem_key, 5, IPC_CREAT | 0666);
+    int sem_id = semget(sem_key, 5, IPC_CREAT | 0600);
     if (sem_id == -1) {
         perror("semget failed");
         exit(1);
     }
-
-    // Use union semun to set values
-    union semun {
-        int val;
-        struct semid_ds *buf;
-        unsigned short *array;
-        struct seminfo *__buf;
-    } sem_attr;
-
-    sem_attr.val = 1; // Set semaphores to 1 when neccesary
-
-    // Debug print the semaphore values
-    printf("Semaphore values: %d %d %d %d %d\n",
-        semctl(sem_id, SEM_MUTEX, GETVAL, 0),
-        semctl(sem_id, SEM_X, GETVAL, 0),
-        semctl(sem_id, SEM_Y, GETVAL, 0),
-        semctl(sem_id, SEM_Z, GETVAL, 0),
-        semctl(sem_id, SEM_PID, GETVAL, 0));
 
     return sem_id;
 }

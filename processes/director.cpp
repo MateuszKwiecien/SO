@@ -14,6 +14,9 @@ fstream stock;          // Handler for the file
 int shm_id_warehouse;
 int shm_id_pid;
 
+/*
+    Is called to safely release IPC resources
+*/
 void cleanup_resources() {
     // Detach shared memory
     if (shmdt(warehouse) == -1) {
@@ -46,6 +49,10 @@ void read_option(char &option, char* buffer){
     option = buffer[0];
 }
 
+/*
+    Provides the functionality for the main task of this process
+    Checks the user input and acts accoridingly
+*/
 void execute_command(const char option){
     switch(option){
         case '1':   // Kills all assembler processes
@@ -63,7 +70,7 @@ void execute_command(const char option){
             semaphore_op(sem_id, 4, 1);
         break;
 
-        case '3':
+        case '3':   // Kills both assembler and supplier processes and stores the state of warehouse into a file
             semaphore_op(sem_id, 4, -1);
             for(int i = 0; i < 5; i++){
                 kill(pid_array[i], SIGINT);
@@ -75,21 +82,23 @@ void execute_command(const char option){
                 << warehouse->Y << '\n'
                 << warehouse->Z << '\n';
 
+            // Save the contents of the warehouse to a file
             stock.open(STOCK_FILE_NAME, ios::trunc | ios::out); // Opens the file in write mode and truncates its content
             if(!stock.is_open()){                               // If the file could not be opened it discards the stock
                 cout << "Could not open file to write\nDiscarding the stock\n";
                 return;
             }
-            stock                                               // Saved the content of the warehouse to the file
+            stock                                               // Saved the content of the warehouse to a file
                 << warehouse->X << '\n'
                 << warehouse->Y << '\n'
                 << warehouse->Z << '\n';
             stock.close();
+
             cleanup_resources();
             exit(0);
         break;
 
-        case '4':
+        case '4':   // Kills both assembler and supplier processes and discards the state of the warehouse
             semaphore_op(sem_id, 4, -1);
             for(int i = 0; i < 5; i++){
                 kill(pid_array[i], SIGINT);
@@ -98,11 +107,6 @@ void execute_command(const char option){
 
             remove(STOCK_FILE_NAME);
             cleanup_resources();
-            exit(0);
-        break;
-
-        case '5':
-            cout << "Exiting the \'director\' process.\n";
             exit(0);
         break;
 
@@ -120,6 +124,9 @@ bool is_number(const string& str){
     return !str.empty();
 }
 
+/*
+    Initializes the warehouse stock for all components to 0
+*/
 void initialize_to_zero(){
     semaphore_op(sem_id, SEM_MUTEX, -1);
     warehouse->X = 0;
@@ -128,6 +135,14 @@ void initialize_to_zero(){
     semaphore_op(sem_id, SEM_MUTEX, 1);
 }
 
+/*
+    This function is called when a file expected to hold the values
+    of saved warehouse state is present
+
+    It attempts to read the warehouse stock date from a file and
+    in case it encounters issues it switches to initializing the
+    values to 0
+*/
 void read_stock_from_file(){
     cout << "Reading stock values form a file\n";
     stock.clear();
@@ -142,18 +157,18 @@ void read_stock_from_file(){
     string temporary;   // Temporarily holds the input from file to check validity
 
     stock >> temporary;
-    if(is_number(temporary)){
+    if(is_number(temporary)){   // Checks if the read value is a number
         semaphore_op(sem_id, SEM_MUTEX, -1);
         warehouse->X = stoi(temporary);
         semaphore_op(sem_id, SEM_MUTEX, 1);
     }
-    else{
+    else{                       // In case of wrong input switches to initializing stock values to 0
         cout << "Could not read a number.\n"
             << "Initializing warehouse stock to 0 instead\n";
         initialize_to_zero();
         return;
     }
-    if(warehouse->X > X_max){
+    if(warehouse->X > X_max){   // In case the read number is too large to fit in the warehouse it switches to initializing to 0
         cout << "Provided number of components is too large to fit into the warehouse.\n"
         << "Initializing warehouse stock to 0 instead\n";
         initialize_to_zero();
@@ -223,14 +238,6 @@ void read_stock_from_file(){
         perror("semctl failed for SEM_Z");
         exit(1);
     }
-
-    printf("Semaphore values: %d %d %d %d %d\n",
-        semctl(sem_id, SEM_MUTEX, GETVAL, 0),
-        semctl(sem_id, SEM_X, GETVAL, 0),
-        semctl(sem_id, SEM_Y, GETVAL, 0),
-        semctl(sem_id, SEM_Z, GETVAL, 0),
-        semctl(sem_id, SEM_PID, GETVAL, 0));
-
 }
 
 int main(){
@@ -261,8 +268,7 @@ int main(){
         << "2 - factory finishes work\n"
         << "3 - both factory and warehouse finish work, warehouse stock is saved to a file\n"
         << "4 - both factory and warehouse finish work, warehouse stock is discarded\n"
-        << "5 - exits director process\n"
-        << "Provide an option: ";
+        << "Enter your choice: ";
 
         read_option(option, buffer);
         execute_command(option);

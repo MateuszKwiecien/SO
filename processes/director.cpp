@@ -263,8 +263,8 @@ int main(){
 
     while(true){
         cout << "\n\nChoose one of the following options:\n"
-        << "1 - warehouse finishes work\n"
-        << "2 - factory finishes work\n"
+        << "1 - factory finishes work\n"
+        << "2 - warehouse finishes work\n"
         << "3 - both factory and warehouse finish work, warehouse stock is saved to a file\n"
         << "4 - both factory and warehouse finish work, warehouse stock is discarded\n"
         << "Enter your choice: ";

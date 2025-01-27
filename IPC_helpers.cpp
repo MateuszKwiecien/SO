@@ -42,63 +42,6 @@ int init_shared_memory_pid() {
     return shmid;
 }
 
-// int init_semaphores() {
-//     key_t sem_key = generate_ipc_key('M');
-//     int sem_id = semget(sem_key, 5, IPC_CREAT | 0666);
-//     if (sem_id == -1) {
-//         perror("semget failed");
-//         exit(1);
-//     }
-//     printf("%d %d %d\n", semctl(sem_id, GETVAL, 1), semctl(sem_id, GETVAL, 2), semctl(sem_id, GETVAL, 3));
-//     printf("%d\n", errno);
-//     switch(errno){
-//         case EACCES:
-//             printf("Blad: EACCES\n");
-//             break;
-//         case EEXIST:
-//         printf("Blad: EACCES\n");
-//             break;
-//         case ENOENT:
-//         printf("Blad: EACCES\n");
-//             break;
-//         case ENOMEM:
-//         printf("Blad: EACCES\n");
-//             break;
-//         case ENOSPC:
-//         printf("Blad: EACCES\n");
-//             break;
-//         case EFAULT:
-//         printf("Blad: EACCES\n");
-//             break;
-//             case EIDRM:
-//         printf("Blad: EACCES\n");
-//             break;
-//             case EINVAL:
-//         printf("Blad: EACCES\n");
-//             break;
-//             case EPERM:
-//         printf("Blad: EACCES\n");
-//             break;
-//             case ERANGE:
-//         printf("Blad: EACCES\n");
-//             break;
-//         default:
-//             printf("Inny blad: %d\n", errno);
-//     }
-
-//     // Initialize semaphores
-//     semctl(sem_id, SEM_MUTEX, SETVAL, 1);
-//     semctl(sem_id, SEM_X, SETVAL, 0);
-//     semctl(sem_id, SEM_Y, SETVAL, 0);
-//     semctl(sem_id, SEM_Z, SETVAL, 0);
-//     semctl(sem_id, SEM_PID, SETVAL, 1);
-
-//     printf("%d %d %d\n", semctl(sem_id, GETVAL, 1), semctl(sem_id, GETVAL, 2), semctl(sem_id, GETVAL, 3));
-
-
-//     return sem_id;
-// }
-
 int init_semaphores() {
     // Generate key for semaphore
     key_t sem_key = generate_ipc_key('M');
@@ -123,10 +66,54 @@ int init_semaphores() {
         perror("semctl failed for SEM_MUTEX");
         exit(1);
     }
+    sem_attr.val = 0; // Set values for other semaphores
+    if (semctl(sem_id, SEM_X, SETVAL, sem_attr) == -1) {
+        perror("semctl failed for SEM_X");
+        exit(1);
+    }
+    if (semctl(sem_id, SEM_Y, SETVAL, sem_attr) == -1) {
+        perror("semctl failed for SEM_Y");
+        exit(1);
+    }
+    if (semctl(sem_id, SEM_Z, SETVAL, sem_attr) == -1) {
+        perror("semctl failed for SEM_Z");
+        exit(1);
+    }
+    sem_attr.val = 1;
     if (semctl(sem_id, SEM_PID, SETVAL, sem_attr) == -1) {
         perror("semctl failed for SEM_PID");
         exit(1);
     }
+
+    // Debug print the semaphore values
+    printf("Semaphore values: %d %d %d %d %d\n",
+        semctl(sem_id, SEM_MUTEX, GETVAL, 0),
+        semctl(sem_id, SEM_X, GETVAL, 0),
+        semctl(sem_id, SEM_Y, GETVAL, 0),
+        semctl(sem_id, SEM_Z, GETVAL, 0),
+        semctl(sem_id, SEM_PID, GETVAL, 0));
+
+    return sem_id;
+}
+
+int init_semaphores_2() {
+    // Generate key for semaphore
+    key_t sem_key = generate_ipc_key('M');
+    int sem_id = semget(sem_key, 5, IPC_CREAT | 0666);
+    if (sem_id == -1) {
+        perror("semget failed");
+        exit(1);
+    }
+
+    // Use union semun to set values
+    union semun {
+        int val;
+        struct semid_ds *buf;
+        unsigned short *array;
+        struct seminfo *__buf;
+    } sem_attr;
+
+    sem_attr.val = 1; // Set semaphores to 1 when neccesary
 
     // Debug print the semaphore values
     printf("Semaphore values: %d %d %d %d %d\n",
@@ -145,9 +132,17 @@ void semaphore_op(int sem_id, int sem_num, int op) {
         static_cast<short int>(op), 
         0
     };
-    if (semop(sem_id, &sb, 1) == -1) {
-        perror("semop failed");
-        exit(1);
+
+    while (semop(sem_id, &sb, 1) == -1) {
+        if (errno == EINTR) {
+            // Log interrupted calls
+            std::cerr << "semop interrupted, retrying...\n";
+            continue;
+        } else {
+            // Log other errors
+            perror("semop failed");
+            exit(1);
+        }
     }
 }
 

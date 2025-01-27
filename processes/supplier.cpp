@@ -71,7 +71,7 @@ void sigint_handler(int sig){
 int main(){
     int shm_id_warehouse = init_shared_memory_warehouse();          // Initialize shared memory for Warehouse struct
     int shm_id_pid = init_shared_memory_pid();                      // Initialize shared memory for PID array
-    int sem_id = init_semaphores();                                 // Initialize semaphores
+    int sem_id = init_semaphores_2();                                 // Initialize semaphores
 
     signal(SIGINT, sigint_handler);
 

@@ -255,7 +255,6 @@ int main(){
     else{
         initialize_to_zero();
     }
-    semctl(sem_id, SEM_WH, SETVAL, 0);                               // After initializing the warehouse it allows the workers to start
 
     cout << "\tDIRECTOR PROCESS\n========================================";
     char option;  // User chosen option

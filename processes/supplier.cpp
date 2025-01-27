@@ -4,6 +4,11 @@
 #include <random>
 
 using namespace std;
+
+static char designation;    // Designation of supplier process
+Warehouse* warehouse;       // Initialize warehouse struct
+pid_t* pid_array;
+
 /*
     supply_product() handles the main task of the supplier process
 
@@ -14,7 +19,7 @@ using namespace std;
     corresponding semaphore to signal availability to the assembler
     processes
 */
-void supply_product(Warehouse* warehouse, char designation, int sem_id){
+void supply_product(int sem_id){
     // Lock the access to the warehouse
     semaphore_op(sem_id, SEM_MUTEX, -1);
 
@@ -60,10 +65,6 @@ void supply_product(Warehouse* warehouse, char designation, int sem_id){
     // Unlock access to the warehouse
     semaphore_op(sem_id, SEM_MUTEX, 1);
 }
-
-static char designation;    // Designation of supplier process
-Warehouse* warehouse;       // Initialize warehouse struct
-pid_t* pid_array;
 
 /*
     sigint_handler() is called when process receives a SIGINT
@@ -118,7 +119,7 @@ int main(){
             semaphore_op(sem_id, SEM_PID, 1);
 
             while(true){
-                supply_product(warehouse, designation, sem_id);
+                supply_product(sem_id);
 
                 delay();
             }
@@ -140,7 +141,7 @@ int main(){
                 semaphore_op(sem_id, SEM_PID, 1);
 
                 while(true){
-                    supply_product(warehouse, designation, sem_id);
+                    supply_product(sem_id);
 
                     delay();
                 }
@@ -155,7 +156,7 @@ int main(){
                 semaphore_op(sem_id, SEM_PID, 1);
 
                 while(true){
-                    supply_product(warehouse, designation, sem_id);
+                    supply_product(sem_id);
                     
                     delay();
                 }

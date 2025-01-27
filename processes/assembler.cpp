@@ -2,6 +2,10 @@
 
 using namespace std;
 
+static char designation;    // Designation of assembler process
+Warehouse* warehouse;       // Initialize warehouse struct
+pid_t* pid_array;
+
 /*
     assemble_product() handles the main task of the assembler process
 
@@ -9,7 +13,7 @@ using namespace std;
     neccesary through the use of semaphores and when possible allows it to assemble
     a product with exclusive access to the shared memory struct Warehouse
 */
-void assemble_product(Warehouse* warehouse, char designation, int sem_id){
+void assemble_product(int sem_id){
     // Wait for the required components
     semaphore_op(sem_id, SEM_X, -1); // Wait for X
     semaphore_op(sem_id, SEM_Y, -1); // Wait for Y
@@ -31,10 +35,6 @@ void assemble_product(Warehouse* warehouse, char designation, int sem_id){
     // Unlock access to the warehouse
     semaphore_op(sem_id, SEM_MUTEX, 1);
 }
-
-static char designation;    // Designation of assembler process
-Warehouse* warehouse;       // Initialize warehouse struct
-pid_t* pid_array;
 
 /*
     sigint_handler() is called when process receives a SIGINT
@@ -79,7 +79,7 @@ int main(){
             semaphore_op(sem_id, SEM_PID, 1);
 
             while(true){
-                assemble_product(warehouse, designation, sem_id);
+                assemble_product(sem_id);
                 sleep(5);
             }
         break;
@@ -93,7 +93,7 @@ int main(){
             semaphore_op(sem_id, SEM_PID, 1);
 
             while(true){
-                assemble_product(warehouse, designation, sem_id);
+                assemble_product(sem_id);
                 sleep(5);
             }
     }

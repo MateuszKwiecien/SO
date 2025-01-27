@@ -2,7 +2,18 @@
 
 using namespace std;
 
-void assemble_product(Warehouse* warehouse, char designation, int sem_id){
+static char designation;    // Designation of assembler process
+Warehouse* warehouse;       // Initialize warehouse struct
+pid_t* pid_array;
+
+/*
+    assemble_product() handles the main task of the assembler process
+
+    It forces the assembler process to await for the availability of all components
+    neccesary through the use of semaphores and when possible allows it to assemble
+    a product with exclusive access to the shared memory struct Warehouse
+*/
+void assemble_product(int sem_id){
     // Wait for the required components
     semaphore_op(sem_id, SEM_X, -1); // Wait for X
     semaphore_op(sem_id, SEM_Y, -1); // Wait for Y
@@ -25,10 +36,20 @@ void assemble_product(Warehouse* warehouse, char designation, int sem_id){
     semaphore_op(sem_id, SEM_MUTEX, 1);
 }
 
-static char designation;    // Designation of assembler process
-Warehouse* warehouse;       // Initialize warehouse struct
-
+/*
+    sigint_handler() is called when process receives a SIGINT
+    signal from another process. It termines the execution of
+    the process
+*/
 void sigint_handler(int sig){
+    // Detach shared memory
+    if (shmdt(warehouse) == -1) {
+        perror("Failed to detach warehouse shared memory");
+    }
+    if (shmdt(pid_array) == -1) {
+        perror("Failed to detach PID array shared memory");
+    }
+
     cout << "Assembler \'" << designation << "\' received SIGINT and stopped working." << endl;
     exit(0);
 }
@@ -41,7 +62,7 @@ int main(){
     signal(SIGINT, sigint_handler);
 
     warehouse = (Warehouse*)shmat(shm_id_warehouse, nullptr, 0);    // Assign Warehouse struct as shared memory
-    pid_t* pid_array = (pid_t *)shmat(shm_id_pid, nullptr, 0);             // Assign PID array as shared memory
+    pid_array = (pid_t *)shmat(shm_id_pid, nullptr, 0);             // Assign PID array as shared memory
 
     switch(fork()){
         case -1:    // fork() error
@@ -58,7 +79,7 @@ int main(){
             semaphore_op(sem_id, SEM_PID, 1);
 
             while(true){
-                assemble_product(warehouse, designation, sem_id);
+                assemble_product(sem_id);
                 sleep(5);
             }
         break;
@@ -72,7 +93,7 @@ int main(){
             semaphore_op(sem_id, SEM_PID, 1);
 
             while(true){
-                assemble_product(warehouse, designation, sem_id);
+                assemble_product(sem_id);
                 sleep(5);
             }
     }

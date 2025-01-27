@@ -48,6 +48,14 @@ void supply_product(Warehouse* warehouse, char designation, int sem_id){
             exit(60);
     }
 
+    printf("Semaphore values: %d %d %d %d %d\n",
+        semctl(sem_id, SEM_MUTEX, GETVAL, 0),
+        semctl(sem_id, SEM_X, GETVAL, 0),
+        semctl(sem_id, SEM_Y, GETVAL, 0),
+        semctl(sem_id, SEM_Z, GETVAL, 0),
+        semctl(sem_id, SEM_PID, GETVAL, 0));
+
+
     // Unlock access to the warehouse
     semaphore_op(sem_id, SEM_MUTEX, 1);
 }
@@ -63,7 +71,7 @@ void sigint_handler(int sig){
 int main(){
     int shm_id_warehouse = init_shared_memory_warehouse();          // Initialize shared memory for Warehouse struct
     int shm_id_pid = init_shared_memory_pid();                      // Initialize shared memory for PID array
-    int sem_id = init_semaphores();                                 // Initialize semaphores
+    int sem_id = init_semaphores_2();                                 // Initialize semaphores
 
     signal(SIGINT, sigint_handler);
 

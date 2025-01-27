@@ -30,4 +30,6 @@ key_t generate_ipc_key(char proj_id);
 int init_shared_memory_warehouse();
 int init_shared_memory_pid();
 int init_semaphores();
+int init_semaphores_2();
 void semaphore_op(int sem_id, int sem_num, int op);
+void remove_IPC_file();

@@ -10,7 +10,36 @@ const char* STOCK_FILE_NAME = "stock";
 pid_t* pid_array;       // Stores the values of PIDs of other processes
 Warehouse* warehouse;
 int sem_id;             // Needs to be a global variable to be accessed in a function
-fstream stock;          // Handler for the file 
+fstream stock;          // Handler for the file
+int shm_id_warehouse;
+int shm_id_pid;
+
+void cleanup_resources() {
+    // Detach shared memory
+    if (shmdt(warehouse) == -1) {
+        perror("Failed to detach warehouse shared memory");
+    }
+    if (shmdt(pid_array) == -1) {
+        perror("Failed to detach PID array shared memory");
+    }
+
+    // Remove shared memory segments
+    if (shmctl(shm_id_warehouse, IPC_RMID, nullptr) == -1) {
+        perror("Failed to remove warehouse shared memory segment");
+    }
+    if (shmctl(shm_id_pid, IPC_RMID, nullptr) == -1) {
+        perror("Failed to remove PID array shared memory segment");
+    }
+
+    // Remove semaphore set
+    if (semctl(sem_id, 0, IPC_RMID) == -1) {
+        perror("Failed to remove semaphore set");
+    }
+
+    remove_IPC_file();
+
+    cout << "IPC resources successfully cleaned up.\n";
+}
 
 void read_option(char &option, char* buffer){
     cin >> buffer;
@@ -46,10 +75,9 @@ void execute_command(const char option){
                 << warehouse->Y << '\n'
                 << warehouse->Z << '\n';
 
-            stock.clear();
             stock.open(STOCK_FILE_NAME, ios::trunc | ios::out); // Opens the file in write mode and truncates its content
             if(!stock.is_open()){                               // If the file could not be opened it discards the stock
-                cout << "Could no open file to write\nDiscarding the stock\n";
+                cout << "Could not open file to write\nDiscarding the stock\n";
                 return;
             }
             stock                                               // Saved the content of the warehouse to the file
@@ -57,6 +85,8 @@ void execute_command(const char option){
                 << warehouse->Y << '\n'
                 << warehouse->Z << '\n';
             stock.close();
+            cleanup_resources();
+            exit(0);
         break;
 
         case '4':
@@ -67,6 +97,8 @@ void execute_command(const char option){
             semaphore_op(sem_id, 4, 1);
 
             remove(STOCK_FILE_NAME);
+            cleanup_resources();
+            exit(0);
         break;
 
         case '5':
@@ -89,9 +121,11 @@ bool is_number(const string& str){
 }
 
 void initialize_to_zero(){
+    semaphore_op(sem_id, SEM_MUTEX, -1);
     warehouse->X = 0;
     warehouse->Y = 0;
     warehouse->Z = 0;
+    semaphore_op(sem_id, SEM_MUTEX, 1);
 }
 
 void read_stock_from_file(){
@@ -109,7 +143,9 @@ void read_stock_from_file(){
 
     stock >> temporary;
     if(is_number(temporary)){
+        semaphore_op(sem_id, SEM_MUTEX, -1);
         warehouse->X = stoi(temporary);
+        semaphore_op(sem_id, SEM_MUTEX, 1);
     }
     else{
         cout << "Could not read a number.\n"
@@ -126,7 +162,9 @@ void read_stock_from_file(){
 
     stock >> temporary;
     if(is_number(temporary)){
+        semaphore_op(sem_id, SEM_MUTEX, -1);
         warehouse->Y = stoi(temporary);
+        semaphore_op(sem_id, SEM_MUTEX, 1);
     }
     else{
         cout << "Could not read a number.\n"
@@ -144,7 +182,9 @@ void read_stock_from_file(){
 
     stock >> temporary;
     if(is_number(temporary)){
+        semaphore_op(sem_id, SEM_MUTEX, -1);
         warehouse->Z = stoi(temporary);
+        semaphore_op(sem_id, SEM_MUTEX, 1);
     }
     else{
         cout << "Could not read a number.\n"
@@ -158,12 +198,44 @@ void read_stock_from_file(){
         initialize_to_zero();
         return;
     }
+    stock.close();
+    
+    union semun {
+        int val;
+        struct semid_ds *buf;
+        unsigned short *array;
+        struct seminfo *__buf;
+    } sem_attr;
+
+    // Set the semaphore values to those read from the file
+    sem_attr.val = warehouse->X;
+    if (semctl(sem_id, SEM_X, SETVAL, sem_attr) == -1) {
+        perror("semctl failed for SEM_X");
+        exit(1);
+    }
+    sem_attr.val = warehouse->Y;
+    if (semctl(sem_id, SEM_Y, SETVAL, sem_attr) == -1) {
+        perror("semctl failed for SEM_Y");
+        exit(1);
+    }
+    sem_attr.val = warehouse->Z;
+    if (semctl(sem_id, SEM_Z, SETVAL, sem_attr) == -1) {
+        perror("semctl failed for SEM_Z");
+        exit(1);
+    }
+
+    printf("Semaphore values: %d %d %d %d %d\n",
+        semctl(sem_id, SEM_MUTEX, GETVAL, 0),
+        semctl(sem_id, SEM_X, GETVAL, 0),
+        semctl(sem_id, SEM_Y, GETVAL, 0),
+        semctl(sem_id, SEM_Z, GETVAL, 0),
+        semctl(sem_id, SEM_PID, GETVAL, 0));
 
 }
 
 int main(){
-    int shm_id_warehouse = init_shared_memory_warehouse();          // Initialize shared memory
-    int shm_id_pid = init_shared_memory_pid();                      // Initialize shared memory for PID array
+    shm_id_warehouse = init_shared_memory_warehouse();              // Initialize shared memory
+    shm_id_pid = init_shared_memory_pid();                          // Initialize shared memory for PID array
     sem_id = init_semaphores();                                     // Initialize semaphores
 
     warehouse = (Warehouse*)shmat(shm_id_warehouse, nullptr, 0);    // Assign Warehouse struct as shared memory
